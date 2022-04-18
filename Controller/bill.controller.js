@@ -15,18 +15,28 @@ const getBill = async(req,res)=>{
 }
 
 const addBill = async(req,res)=>{
-    const {MCN,MAKH,MAKHO,MANV,SOHD,TRIGIA} = req.body;
-    const IntSoHD = parseInt(SOHD);
-    
-    const sql = `insert into HOADON (SOHD,MAKH,MANV,MAKHO,TRIGIA) values(${IntSoHD},'${MAKH}','${MANV}','${MAKHO}',${TRIGIA} )`;
-    console.log(date)
+    const {MCN,MAKH,MAKHO,MANV,TRIGIA} = req.body;
+    const {arritemBill} = req.body;
+    const SOHD =Math.floor(Math.random()*100000)+10000;
+    const sql = `insert into HOADON (SOHD,MAKH,MANV,MAKHO,TRIGIA) values(${SOHD},'${MAKH}','${MANV}','${MAKHO}',${TRIGIA} )`;
+    // console.log(SOHD)
     const pool = await checkServer(MCN);
     return await pool.request().query(sql,(err,rows)=>{
         if(err){
             return res.json({msg:err})
-        }
-        return res.json({msg:"Success"})
+        }else{
+            arritemBill.forEach(async(item)=>{
+                const sqlDt = `insert into CTHD (SOHD,MASP,SOLUONG) values(${SOHD},'${item.MASP}','${item.SL}')`;
+                await pool.request().query(sqlDt,(err,rows)=>{
+                    if(err){
+                        return res.json({msg:err})
+                    }
+                })
+            })
+            return res.json({msg:"Success"})
+        }     
     })
+    // console.log(arritemBill)
 }
 const getCode = async(req,res)=>{
     const {MCN} = req.body;
@@ -55,10 +65,24 @@ const Statical = async(req, res)=>{
     })
 }
 
+const getProduct = async(req, res)=>{
+    const {MCN} = req.body;
+    const sql = "SELECT * FROM SANPHAM";
+    const pool = await checkServer(MCN);
+    return await pool.request().query(sql, (err, rows)=>{
+        if(err){
+            return res.json({msg:err})
+        }else{
+            return res.json({msg:rows})
+        }
+    })
+}
+
 module.exports = {
     getBill,
     addBill,
     getCode,
-    Statical
+    Statical,
+    getProduct
     
 }
